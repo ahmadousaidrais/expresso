@@ -1,0 +1,172 @@
+NAME: shop-web
+LAST DEPLOYED: Thu Feb 22 06:58:45 2024
+NAMESPACE: chris2
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+HOOKS:
+MANIFEST:
+---
+# Source: shop-web/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: shop-web
+  labels:
+    app: shop-web
+    helm.sh/chart: shop-web-0.1.0
+    version: v1
+    app.kubernetes.io/name: shop-web
+    app.kubernetes.io/instance: shop-web
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
+# Source: shop-web/templates/secret-docker.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: regcred
+data:
+  .dockerconfigjson: "ewoJImF1dGhzIjogewoJCSJodHRwczovL2luZGV4LmRvY2tlci5pby92MS8iOiB7CgkJCSJhdXRoIjogIlkyaHlhWE5rZVd4aGJqcEVlV3hoYmpJek4wQT0iCgkJfQoJfQp9"
+type: kubernetes.io/dockerconfigjson
+---
+# Source: shop-web/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-configmap
+data:
+  ProductCatalogUrl: "http://espresso-shop-product-catalog-svc:8091"
+  ReviewsUrl: "http://espresso-shop-reviews-svc:8092"
+---
+# Source: shop-web/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: shop-web
+  labels:
+    app: shop-web
+    helm.sh/chart: shop-web-0.1.0
+    version: v1
+    app.kubernetes.io/name: shop-web
+    app.kubernetes.io/instance: shop-web
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: NodePort
+  ports:
+    - port: 8090
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    version: v1
+    app.kubernetes.io/name: shop-web
+    app.kubernetes.io/instance: shop-web
+---
+# Source: shop-web/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shop-web
+  labels:
+    app: shop-web
+    helm.sh/chart: shop-web-0.1.0
+    version: v1
+    app.kubernetes.io/name: shop-web
+    app.kubernetes.io/instance: shop-web
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      version: v1
+      app.kubernetes.io/name: shop-web
+      app.kubernetes.io/instance: shop-web
+  template:
+    metadata:
+      labels:
+        app: shop-web
+        helm.sh/chart: shop-web-0.1.0
+        version: v1
+        app.kubernetes.io/name: shop-web
+        app.kubernetes.io/instance: shop-web
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      serviceAccountName: shop-web
+      securityContext:
+        {}
+      containers:
+        - name: shop-web
+          securityContext:
+            {}
+          image: "chrisdylan/expresso:web"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          env:
+            - name: ProductCatalogUrl
+              valueFrom:
+                configMapKeyRef:
+                  name: my-configmap
+                  key: ProductCatalogUrl
+            - name: ReviewsUrl
+              valueFrom:
+                configMapKeyRef:
+                  name: my-configmap
+                  key: ReviewsUrl
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+---
+# Source: shop-web/templates/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: shop-web
+  labels:
+    app: shop-web
+    helm.sh/chart: shop-web-0.1.0
+    version: v1
+    app.kubernetes.io/name: shop-web
+    app.kubernetes.io/instance: shop-web
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: shop-web
+  minReplicas: 1
+  maxReplicas: 100
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+NOTES:
+1. Get the application URL by running these commands:
+  export NODE_PORT=$(kubectl get --namespace chris2 -o jsonpath="{.spec.ports[0].nodePort}" services shop-web)
+  export NODE_IP=$(kubectl get nodes --namespace chris2 -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
