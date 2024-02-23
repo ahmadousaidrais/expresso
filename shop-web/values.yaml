@@ -11,7 +11,7 @@ image:
   tag: ""
 
 imagePullSecrets:
-  - name: regcred
+  - name: regcreds
 nameOverride: ""
 fullnameOverride: ""
 
@@ -44,6 +44,9 @@ service:
   type: NodePort
   port: 8090
   containerPort: 80
+
+probe:
+  enabled: false
 
 ingress:
   enabled: false

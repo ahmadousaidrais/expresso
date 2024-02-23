@@ -1,0 +1,141 @@
+NAME: shop-reviews
+LAST DEPLOYED: Fri Feb 23 11:59:28 2024
+NAMESPACE: chris2
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+HOOKS:
+MANIFEST:
+---
+# Source: shop-reviews/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: shop-reviews
+  labels:
+    app: shop-reviews
+    helm.sh/chart: shop-reviews-0.1.0
+    version: v1
+    app.kubernetes.io/name: shop-reviews
+    app.kubernetes.io/instance: shop-reviews
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
+# Source: shop-reviews/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: espresso-shop-reviews-svc
+  labels:
+    app: shop-reviews
+    helm.sh/chart: shop-reviews-0.1.0
+    version: v1
+    app.kubernetes.io/name: shop-reviews
+    app.kubernetes.io/instance: shop-reviews
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: NodePort
+  ports:
+    - port: 8092
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    version: v1
+    app.kubernetes.io/name: shop-reviews
+    app.kubernetes.io/instance: shop-reviews
+---
+# Source: shop-reviews/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shop-reviews
+  labels:
+    app: shop-reviews
+    helm.sh/chart: shop-reviews-0.1.0
+    version: v1
+    app.kubernetes.io/name: shop-reviews
+    app.kubernetes.io/instance: shop-reviews
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      version: v1
+      app.kubernetes.io/name: shop-reviews
+      app.kubernetes.io/instance: shop-reviews
+  template:
+    metadata:
+      labels:
+        app: shop-reviews
+        helm.sh/chart: shop-reviews-0.1.0
+        version: v1
+        app.kubernetes.io/name: shop-reviews
+        app.kubernetes.io/instance: shop-reviews
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: shop-reviews
+      securityContext:
+        {}
+      containers:
+        - name: shop-reviews
+          securityContext:
+            {}
+          image: "chrisdylan/expresso:reviews"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+---
+# Source: shop-reviews/templates/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: shop-reviews
+  labels:
+    app: shop-reviews
+    helm.sh/chart: shop-reviews-0.1.0
+    version: v1
+    app.kubernetes.io/name: shop-reviews
+    app.kubernetes.io/instance: shop-reviews
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: shop-reviews
+  minReplicas: 1
+  maxReplicas: 100
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+NOTES:
+1. Get the application URL by running these commands:
+  export NODE_PORT=$(kubectl get --namespace chris2 -o jsonpath="{.spec.ports[0].nodePort}" services shop-reviews)
+  export NODE_IP=$(kubectl get nodes --namespace chris2 -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT

@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "shop-reviews.fullname" . }}
+  name: {{ include "espresso-shop-product-catalog.fullname" . }}
   labels:
-    {{- include "shop-reviews.labels" . | nindent 4 }}
+    {{- include "espresso-shop-product-catalog.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "shop-reviews.fullname" . }}
+    name: {{ include "espresso-shop-product-catalog.fullname" . }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:

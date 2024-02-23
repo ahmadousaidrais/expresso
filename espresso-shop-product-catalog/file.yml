@@ -1,0 +1,126 @@
+NAME: expresso-shop-catalog
+LAST DEPLOYED: Fri Feb 23 11:05:41 2024
+NAMESPACE: chris2
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+HOOKS:
+MANIFEST:
+---
+# Source: espresso-shop-product-catalog/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: expresso-shop-catalog-espresso-shop-product-catalog
+  labels:
+    app: espresso-shop-product-catalog
+    helm.sh/chart: espresso-shop-product-catalog-0.1.0
+    version: v1
+    app.kubernetes.io/name: espresso-shop-product-catalog
+    app.kubernetes.io/instance: expresso-shop-catalog
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
+# Source: espresso-shop-product-catalog/templates/secret-docker.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: regcred
+data:
+  .dockerconfigjson: "ewoJImF1dGhzIjogewoJCSJodHRwczovL2luZGV4LmRvY2tlci5pby92MS8iOiB7CgkJCSJhdXRoIjogIlkyaHlhWE5rZVd4aGJqcEVlV3hoYmpJek4wQT0iCgkJfQoJfQp9"
+type: kubernetes.io/dockerconfigjson
+---
+# Source: espresso-shop-product-catalog/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: expresso-shop-catalog-espresso-shop-product-catalog
+  labels:
+    app: espresso-shop-product-catalog
+    helm.sh/chart: espresso-shop-product-catalog-0.1.0
+    version: v1
+    app.kubernetes.io/name: espresso-shop-product-catalog
+    app.kubernetes.io/instance: expresso-shop-catalog
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8091
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    version: v1
+    app.kubernetes.io/name: espresso-shop-product-catalog
+    app.kubernetes.io/instance: expresso-shop-catalog
+---
+# Source: espresso-shop-product-catalog/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: expresso-shop-catalog-espresso-shop-product-catalog
+  labels:
+    app: espresso-shop-product-catalog
+    helm.sh/chart: espresso-shop-product-catalog-0.1.0
+    version: v1
+    app.kubernetes.io/name: espresso-shop-product-catalog
+    app.kubernetes.io/instance: expresso-shop-catalog
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      version: v1
+      app.kubernetes.io/name: espresso-shop-product-catalog
+      app.kubernetes.io/instance: expresso-shop-catalog
+  template:
+    metadata:
+      labels:
+        app: espresso-shop-product-catalog
+        helm.sh/chart: espresso-shop-product-catalog-0.1.0
+        version: v1
+        app.kubernetes.io/name: espresso-shop-product-catalog
+        app.kubernetes.io/instance: expresso-shop-catalog
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      imagePullSecrets:
+        - regcred
+      serviceAccountName: expresso-shop-catalog-espresso-shop-product-catalog
+      securityContext:
+        {}
+      containers:
+        - name: espresso-shop-product-catalog
+          securityContext:
+            {}
+          image: "chrisdylan/expresso:product:1.16.0"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8091
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128M
+
+NOTES:
+1. Get the application URL by running these commands:
+  export POD_NAME=$(kubectl get pods --namespace chris2 -l "app.kubernetes.io/name=espresso-shop-product-catalog,app.kubernetes.io/instance=expresso-shop-catalog" -o jsonpath="{.items[0].metadata.name}")
+  export CONTAINER_PORT=$(kubectl get pod --namespace chris2 $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+  echo "Visit http://127.0.0.1:8080 to use your application"
+  kubectl --namespace chris2 port-forward $POD_NAME 8080:$CONTAINER_PORT

@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "shop-reviews.fullname" . }}
+  name: {{ include "espresso-shop-reviews-v2.fullname" . }}
   labels:
-    {{- include "shop-reviews.labels" . | nindent 4 }}
+    {{- include "espresso-shop-reviews-v2.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "shop-reviews.selectorLabels" . | nindent 6 }}
+      {{- include "espresso-shop-reviews-v2.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "shop-reviews.labels" . | nindent 8 }}
+        {{- include "espresso-shop-reviews-v2.labels" . | nindent 8 }}
 	{{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -27,7 +27,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "shop-reviews.serviceAccountName" . }}
+      serviceAccountName: {{ include "espresso-shop-reviews-v2.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -37,8 +37,8 @@ spec:
           image: "{{ .Values.image.repository }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-          - name: {{ .Values.enviroment.key }}
-            value: {{ .Values.enviroment.value }}
+          - name: {{ .Values.environment.key }}
+            value: {{ .Values.environment.value }}
           ports:
             - name: http
               containerPort: {{ .Values.service.containerPort }}

@@ -1,0 +1,9 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ .Values.service.name }}
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: {{- include "espresso-shop-reviews-v2.selectorLabels" . | nindent 4 }}
