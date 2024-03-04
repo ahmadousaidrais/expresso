@@ -39,6 +39,26 @@ spec:
           env:
           - name: {{ .Values.environment.key }}
             value: {{ .Values.environment.value }}
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: postgres-secret
+                key: POSTGRES_PASSWORD
+          - name: POSTGRES_DB
+            valueFrom:
+              configMapKeyRef:
+                name: postgres-configmap
+                key: POSTGRES_DB
+          - name: POSTGRES_USER
+            valueFrom:
+              configMapKeyRef:
+                name: postgres-configmap
+                key: POSTGRES_USER
+          - name: POSTGRES_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: postgres-configmap
+                key: POSTGRES_HOST
           ports:
             - name: http
               containerPort: {{ .Values.service.containerPort }}
