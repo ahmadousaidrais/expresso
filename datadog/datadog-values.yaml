@@ -1,0 +1,6 @@
+datadog:
+  apiKeyExistingSecret: datadog-secret
+  apm:
+    instrumentation:
+      enabled: true
+
