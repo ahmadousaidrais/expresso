@@ -17,9 +17,6 @@ ENV PGUSER="postgres"
 ENV PGPASSWORD="postgres"
 
 # Set AWS credentials (replace with your AWS credentials)
-#ENV AWS_ACCESS_KEY_ID=""
-#ENV AWS_SECRET_ACCESS_KEY=""
-#ENV AWS_DEFAULT_REGION="us-east-1"
 WORKDIR /backup
 # Copy the backup script into the container
 COPY . .
